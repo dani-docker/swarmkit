@@ -18,6 +18,7 @@ import (
 	"github.com/docker/swarmkit/manager/state/store"
 	"github.com/docker/swarmkit/watch"
 	"golang.org/x/net/context"
+	"runtime/debug"
 )
 
 var (
@@ -134,7 +135,9 @@ func (lb *LogBroker) registerSubscription(subscription *subscription) {
 	lb.registeredSubscriptions[subscription.message.ID] = subscription
 	lb.subscriptionQueue.Publish(subscription)
 
+	fmt.Println(lb.subscriptionsByNode)
 	for _, node := range subscription.Nodes() {
+		fmt.Println("Dani: node ", node)
 		if _, ok := lb.subscriptionsByNode[node]; !ok {
 			// Mark nodes that won't receive the message as done.
 			subscription.Done(node, fmt.Errorf("node %s is not available", node))
@@ -287,7 +290,8 @@ func (lb *LogBroker) SubscribeLogs(request *api.SubscribeLogsRequest, stream api
 func (lb *LogBroker) nodeConnected(nodeID string) {
 	lb.mu.Lock()
 	defer lb.mu.Unlock()
-
+	fmt.Println("Dani: nodeconnected ", nodeID)
+	debug.PrintStack()
 	if _, ok := lb.subscriptionsByNode[nodeID]; !ok {
 		lb.subscriptionsByNode[nodeID] = make(map[*subscription]struct{})
 	}
@@ -296,7 +300,8 @@ func (lb *LogBroker) nodeConnected(nodeID string) {
 func (lb *LogBroker) nodeDisconnected(nodeID string) {
 	lb.mu.Lock()
 	defer lb.mu.Unlock()
-
+	fmt.Println("Dani: nodeDisconnect " , nodeID)
+	debug.PrintStack()
 	for sub := range lb.subscriptionsByNode[nodeID] {
 		sub.Done(nodeID, fmt.Errorf("node %s disconnected unexpectedly", nodeID))
 	}
@@ -330,7 +335,7 @@ func (lb *LogBroker) ListenSubscriptions(request *api.ListenSubscriptionsRequest
 	defer subscriptionCancel()
 
 	log.Debug("node registered")
-
+	debug.PrintStack()
 	activeSubscriptions := make(map[string]*subscription)
 
 	// Start by sending down all active subscriptions.
