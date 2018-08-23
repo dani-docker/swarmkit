@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"fmt"
 )
 
 var (
@@ -246,6 +247,8 @@ func (s *session) logSubscriptions(ctx context.Context) error {
 	log.Debugf("")
 
 	client := api.NewLogBrokerClient(s.conn.ClientConn)
+	fmt.Println("Dani: " ,s.conn.Peer().Addr)
+	fmt.Println("Dani: " ,s.conn.Peer().NodeID)
 	subscriptions, err := client.ListenSubscriptions(ctx, &api.ListenSubscriptionsRequest{})
 	if err != nil {
 		return err
