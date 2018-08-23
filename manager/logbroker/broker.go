@@ -361,19 +361,26 @@ func (lb *LogBroker) ListenSubscriptions(request *api.ListenSubscriptionsRequest
 			subscription := v.(*subscription)
 
 			if subscription.Closed() {
+				fmt.Println("Dani: in closed select")
 				delete(activeSubscriptions, subscription.message.ID)
 			} else {
+				fmt.Println("Dani: in else select : ", subscription.message.Close , subscription.message.ID)
 				// Avoid sending down the same subscription multiple times
 				if _, ok := activeSubscriptions[subscription.message.ID]; ok {
+					fmt.Println("Dani: in continue ")
+					fmt.Println(activeSubscriptions)
 					continue
 				}
 				activeSubscriptions[subscription.message.ID] = subscription
 			}
+			fmt.Println("Dani: between if else")
 			if err := stream.Send(subscription.message); err != nil {
+				fmt.Println("Dani: send print error", err.Error())
 				log.Error(err)
 				return err
 			}
 		case <-stream.Context().Done():
+			fmt.Println("Dani context is done")
 			return stream.Context().Err()
 		case <-pctx.Done():
 			return nil
